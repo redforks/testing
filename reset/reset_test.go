@@ -1,16 +1,16 @@
-package reset
+package reset_test
 
 import (
-	"sync/atomic"
 	"testing"
 
+	. "github.com/redforks/testing/reset"
+
 	. "github.com/onsi/ginkgo"
-	"github.com/stretchr/testify/assert"
+	. "github.com/onsi/gomega"
 )
 
-var t = GinkgoT
-
 func TestRest(t *testing.T) {
+	RegisterFailHandler(Fail)
 	RunSpecs(t, "Reset")
 }
 
@@ -29,18 +29,24 @@ var _ = Describe("Reset", func() {
 		log = []string{}
 	})
 
+	AfterEach(func() {
+		if Enabled() {
+			Disable()
+		}
+	})
+
 	It("Not Enabled", func() {
-		assert.False(t(), Enabled())
+		Ω(Enabled()).Should(BeFalse())
 		Add(resetA)
 		Add(resetB)
 
-		assert.Empty(t(), log)
+		Ω(log).Should(BeEmpty())
 	})
 
 	It("Set disabled disabled", func() {
-		assert.Panics(t(), func() {
+		Ω(func() {
 			Disable()
-		})
+		}).Should(Panic())
 	})
 
 	Context("Enabled", func() {
@@ -51,34 +57,33 @@ var _ = Describe("Reset", func() {
 		})
 
 		It("Enabled", func() {
-			assert.True(t(), Enabled())
-			assert.Empty(t(), log)
+			Ω(Enabled()).Should(BeTrue())
+			Ω(log).Should(BeEmpty())
 			Disable()
-			assert.False(t(), Enabled())
-			assert.Equal(t(), []string{"a"}, log)
+			Ω(Enabled()).Should(BeFalse())
+			Ω(log).Should(Equal([]string{"a"}))
 		})
 
 		It("Execute by reversed order", func() {
 			Add(resetB)
 			Disable()
-			assert.Equal(t(), []string{"b", "a"}, log)
+			Ω(log).Should(Equal([]string{"b", "a"}))
 		})
 
 		It("Add dup action", func() {
 			Add(resetA)
 			Add(resetA)
 			Disable()
-			assert.Equal(t(), []string{"a"}, log)
+			Ω(log).Should(Equal([]string{"a"}))
 		})
 
 		It("Not allow Add() while executing", func() {
 			Add(func() {
 				Add(resetA)
 			})
-			assert.Panics(t(), func() {
+			Ω(func() {
 				Disable()
-			})
-			atomic.StoreInt32((*int32)(&state), int32(st_disabled))
+			}).Should(Panic())
 		})
 
 	})

@@ -8,9 +8,6 @@
 package reset
 
 import (
-	"io/ioutil"
-	"log"
-	"os"
 	"reflect"
 	"sync"
 	"sync/atomic"
@@ -53,8 +50,6 @@ func Enable() {
 	if !atomic.CompareAndSwapInt32((*int32)(&state), int32(st_disabled), int32(st_enabled)) {
 		panic("testing/reset already enabled or last test not reset successfully")
 	}
-	// mute log output, do not pollute console
-	log.SetOutput(ioutil.Discard)
 }
 
 // Disable reset manager.
@@ -65,15 +60,15 @@ func Disable() {
 	}
 
 	mutex.Lock()
-	defer mutex.Unlock()
+	defer func() {
+		// Mark disabled after running reset functions to prevent next test run
+		// under unrest environment.
+		atomic.StoreInt32((*int32)(&state), int32(st_disabled))
+		mutex.Unlock()
+	}()
 
 	execResets()
 	execResetRecovers()
-	// Mark disabled after running reset functions to prevent next test run
-	// under unrest environment.
-	atomic.StoreInt32((*int32)(&state), int32(st_disabled))
-	// restore log output
-	log.SetOutput(os.Stderr)
 }
 
 func execResets() {

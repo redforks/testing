@@ -4,6 +4,12 @@ var (
 	resetFns, recoverFns []func()
 )
 
+// ClearInternal used by reset package unit tests only, never call ClearInternal outside reset package
+func ClearInternal() {
+	resetFns = nil
+	recoverFns = nil
+}
+
 // Register() register two function to cooperate testing reset/recover process.
 // Unlike reset.Add(), which register a reset function to undo things for
 // current call, after current test function finished. Register() normally
@@ -25,12 +31,18 @@ var (
 // all fReset() function called, fRecover() functions called by register order.
 //
 // Both fReset and fRecover can be nil.
+//
+// fRecover function run immediately on Register to do init job.
 func Register(fReset func(), fRecover func()) {
 	if fReset != nil {
 		resetFns = append(resetFns, fReset)
 	}
 	if fRecover != nil {
 		recoverFns = append(recoverFns, fRecover)
+	}
+
+	if fRecover != nil {
+		fRecover()
 	}
 }
 

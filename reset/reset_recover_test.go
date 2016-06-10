@@ -1,8 +1,10 @@
-package reset
+package reset_test
 
 import (
 	bdd "github.com/onsi/ginkgo"
-	"github.com/stretchr/testify/assert"
+	. "github.com/onsi/gomega"
+
+	. "github.com/redforks/testing/reset"
 )
 
 var _ = bdd.Describe("reset - recover", func() {
@@ -12,7 +14,8 @@ var _ = bdd.Describe("reset - recover", func() {
 			log += msg + "\n"
 		}
 		assertLog = func(expected string) {
-			assert.Equal(t(), expected, log)
+			Ω(log).Should(Equal(expected))
+			log = ""
 		}
 	)
 
@@ -21,7 +24,8 @@ var _ = bdd.Describe("reset - recover", func() {
 	})
 
 	bdd.AfterEach(func() {
-		resetFns, recoverFns = nil, nil
+		ClearInternal()
+
 		if Enabled() {
 			Disable()
 		}
@@ -33,6 +37,7 @@ var _ = bdd.Describe("reset - recover", func() {
 		}, func() {
 			appendLog("onRecover")
 		})
+		assertLog("onRecover\n")
 
 		Enable()
 		assertLog("")
@@ -43,7 +48,7 @@ var _ = bdd.Describe("reset - recover", func() {
 		Enable()
 		Disable()
 		// Register once, effect for ever.
-		assertLog("onReset\nonRecover\nonReset\nonRecover\n")
+		assertLog("onReset\nonRecover\n")
 	})
 
 	bdd.It("nil", func() {
@@ -60,11 +65,14 @@ var _ = bdd.Describe("reset - recover", func() {
 		}, func() {
 			appendLog("onRecover 1")
 		})
+		assertLog("onRecover 1\n")
+
 		Register(func() {
 			appendLog("onReset 2")
 		}, func() {
 			appendLog("onRecover 2")
 		})
+		assertLog("onRecover 2\n")
 
 		Enable()
 		Disable()
