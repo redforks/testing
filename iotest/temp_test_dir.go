@@ -1,13 +1,12 @@
 package iotest
 
 import (
+	"github.com/redforks/testing/reset"
 	"io/ioutil"
 	"os"
-
-	"github.com/redforks/testing/reset"
 )
 
-// Create a temporary directory used for testing, the directory deleted automatically in testing/reset.
+// Create a temporary directory used for testing, the directory deleted automatically in spork/testing/reset.
 type TempTestDir string
 
 // Create a new TempTestDir.
@@ -29,7 +28,7 @@ func (ttd TempTestDir) Dir() string {
 }
 
 // Close() delete the whole temp directory, including the files and sub directories in
-// it. Ignore any IO error. Normally do not need call .Close(), it automatically called in testing/reset.
+// it. Ignore any IO error. Normally do not need call .Close(), it automatically called in spork/testing/reset.
 func (ttd TempTestDir) Close() {
-	os.RemoveAll(string(ttd))
+	_ = os.RemoveAll(string(ttd))
 }

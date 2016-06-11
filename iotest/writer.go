@@ -15,8 +15,14 @@ type errorWriter struct {
 	n int
 }
 
+// ByteWriterWriter combines ByteWriter and Writer interface that ErrorWriter actually implemented.
+type byteWriterWriter interface {
+	io.ByteWriter
+	io.Writer
+}
+
 // Returns a writer that would error after writes n bytes
-func ErrorWriter(n int) *errorWriter {
+func ErrorWriter(n int) byteWriterWriter {
 	return &errorWriter{n}
 }
 
