@@ -2,9 +2,10 @@ package iotest_test
 
 import (
 	"bytes"
-	"github.com/redforks/testing/reset"
 	"io"
 	"time"
+
+	"github.com/redforks/testing/reset"
 
 	. "github.com/redforks/testing/iotest"
 

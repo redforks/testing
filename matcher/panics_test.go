@@ -2,6 +2,7 @@ package matcher_test
 
 import (
 	"errors"
+
 	. "github.com/redforks/testing/matcher"
 
 	. "github.com/onsi/ginkgo"

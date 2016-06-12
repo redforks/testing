@@ -1,9 +1,10 @@
 package iotest
 
 import (
-	"github.com/redforks/testing/reset"
 	"io/ioutil"
 	"os"
+
+	"github.com/redforks/testing/reset"
 )
 
 // Create a temporary directory used for testing, the directory deleted automatically in spork/testing/reset.
