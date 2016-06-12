@@ -1,13 +1,13 @@
-package testdb
+package testdb_test
 
 import (
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
 	"testing"
 )
 
-var t = GinkgoT
-
 func TestMongotest(t *testing.T) {
+	RegisterFailHandler(Fail)
 	RunSpecs(t, "Mongotest Suite")
 }

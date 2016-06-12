@@ -2,7 +2,8 @@ package testdb
 
 import (
 	"github.com/redforks/testing/reset"
-	"github.com/stretchr/testify/assert"
+
+	. "github.com/onsi/gomega"
 	"gopkg.in/mgo.v2"
 )
 
@@ -22,19 +23,15 @@ type TestDb struct {
 	url string
 }
 
-// Create a new TestDb instance, name of the test database, if empty, uses
-// "test". Recommand use a named database, because after each test the database
-// will be deleted, pass a unique name to prevent break others. TestDb always
-// connect to 127.0.0.1.
-func New(t assert.TestingT, name string) *TestDb {
-	url := "127.0.0.1/" + name
-	session, err := mgo.Dial(url)
-	assert.NoError(t, err)
+// Create a new TestDb instance.
+func New(dbUrl string) *TestDb {
+	session, err := mgo.Dial(dbUrl)
+	Ω(err).Should(Succeed())
 	reset.Add(func() {
-		assert.NoError(t, session.DB("").DropDatabase())
+		Ω(session.DB("").DropDatabase()).Should(Succeed())
 		session.Close()
 	})
-	return &TestDb{session, session.DB(""), url}
+	return &TestDb{session, session.DB(""), dbUrl}
 }
 
 // Return mongodb connection url
