@@ -34,11 +34,13 @@ func ClearInternal() {
 //
 // fRecover function run immediately on Register to do init job.
 func Register(fReset func(), fRecover func()) {
-	if fReset != nil {
-		resetFns = append(resetFns, fReset)
-	}
-	if fRecover != nil {
-		recoverFns = append(recoverFns, fRecover)
+	if TestMode() {
+		if fReset != nil {
+			resetFns = append(resetFns, fReset)
+		}
+		if fRecover != nil {
+			recoverFns = append(recoverFns, fRecover)
+		}
 	}
 
 	if fRecover != nil {
