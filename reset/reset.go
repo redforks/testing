@@ -8,7 +8,6 @@
 package reset
 
 import (
-	"reflect"
 	"sync"
 	"sync/atomic"
 )
@@ -40,9 +39,7 @@ func Add(action func()) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	if !isActionInQueue(action) {
-		actionQueue = append(actionQueue, action)
-	}
+	actionQueue = append(actionQueue, action)
 }
 
 // Enable reset manager.
@@ -84,19 +81,4 @@ func execResets() {
 // caller can sure she is running inside a unit test.
 func Enabled() bool {
 	return atomic.LoadInt32((*int32)(&state)) != int32(st_disabled)
-}
-
-func isActionInQueue(action func()) bool {
-	for _, f := range actionQueue {
-		if funcEquals(f, action) {
-			return true
-		}
-	}
-	return false
-}
-
-func funcEquals(f1, f2 func()) bool {
-	sf1 := reflect.ValueOf(f1)
-	sf2 := reflect.ValueOf(f2)
-	return sf1.Pointer() == sf2.Pointer()
 }

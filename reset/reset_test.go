@@ -74,7 +74,7 @@ var _ = Describe("Reset", func() {
 			Add(resetA)
 			Add(resetA)
 			Disable()
-			Ω(log).Should(Equal([]string{"a"}))
+			Ω(log).Should(Equal([]string{"a", "a", "a"}))
 		})
 
 		It("Not allow Add() while executing", func() {
