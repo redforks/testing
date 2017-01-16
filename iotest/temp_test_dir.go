@@ -1,6 +1,7 @@
 package iotest
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -31,5 +32,9 @@ func (ttd TempTestDir) Dir() string {
 // Close() delete the whole temp directory, including the files and sub directories in
 // it. Ignore any IO error. Normally do not need call .Close(), it automatically called in spork/testing/reset.
 func (ttd TempTestDir) Close() {
-	_ = os.RemoveAll(string(ttd))
+	err := os.RemoveAll(string(ttd))
+	if err != nil {
+		fmt.Println("Remove TempTestDir failed")
+		fmt.Println(err)
+	}
 }
