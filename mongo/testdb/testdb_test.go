@@ -1,8 +1,6 @@
 package testdb_test
 
 import (
-	"spork/mongo"
-
 	"github.com/redforks/testing/reset"
 
 	"gopkg.in/mgo.v2"
@@ -18,6 +16,9 @@ type Rec struct {
 	Name string
 }
 
+const testDBName = "unittest"
+const testDBUrl = "/" + testDBName
+
 var _ = bdd.Describe("mongotest", func() {
 	var (
 		testDb *TestDb
@@ -25,7 +26,7 @@ var _ = bdd.Describe("mongotest", func() {
 
 	bdd.BeforeEach(func() {
 		reset.Enable()
-		testDb = New("/unittest")
+		testDb = New(testDBUrl)
 	})
 
 	bdd.AfterEach(func() {
@@ -38,14 +39,14 @@ var _ = bdd.Describe("mongotest", func() {
 		// ensure database are deleted in reset
 		dbs, err := session.DatabaseNames()
 		Ω(err).Should(Succeed())
-		Ω(dbs).ShouldNot(ContainElement(mongo.DefaultTestDBName))
+		Ω(dbs).ShouldNot(ContainElement(testDBName))
 	})
 
 	bdd.It("Fields", func() {
 		Ω(testDb.Session).ShouldNot(BeNil())
 		Ω(testDb.Database).ShouldNot(BeNil())
-		Ω(testDb.Name).Should(Equal(mongo.DefaultTestDBName))
-		Ω(testDb.Url()).Should(Equal(mongo.DbURL()))
+		Ω(testDb.Name).Should(Equal(testDBName))
+		Ω(testDb.Url()).Should(Equal(testDBUrl))
 	})
 
 	bdd.It("Insert", func() {
