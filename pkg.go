@@ -1,4 +1,4 @@
-// Define helper / mock for unit testing
+// Package testing define helper / mock for unit testing
 //
 // Because golang likes return error object instead of exception/panic,
 // always handle error return values is a good practise. But sometimes it is
@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-// Try the action until it returns true, call timeout if timeout.
+// TryWait the action until it returns true, call timeout if timeout.
 func TryWait(d time.Duration, try func() bool, timeout func()) {
 	tick := int64(d) / 100
 	for i := 0; i < 100; i++ {
