@@ -1,9 +1,6 @@
 package testdb
 
 import (
-	"github.com/redforks/testing/reset"
-
-	. "github.com/onsi/gomega"
 	"gopkg.in/mgo.v2"
 )
 
@@ -26,15 +23,23 @@ type TestDb struct {
 // Create a new TestDb instance.
 func New(dbUrl string) *TestDb {
 	session, err := mgo.Dial(dbUrl)
-	Ω(err).Should(Succeed())
-	reset.Add(func() {
-		Ω(session.DB("").DropDatabase()).Should(Succeed())
-		session.Close()
-	})
+	if err != nil {
+		panic(err)
+	}
 	return &TestDb{session, session.DB(""), dbUrl}
 }
 
 // Return mongodb connection url
 func (db *TestDb) Url() string {
 	return db.url
+}
+
+// Close delete temp test db.
+func (db *TestDb) Close() error {
+	if err := db.Session.DB("").DropDatabase(); err != nil {
+		panic(err)
+	}
+
+	db.Session.Close()
+	return nil
 }

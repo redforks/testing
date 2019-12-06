@@ -1,14 +1,11 @@
 package testdb_test
 
 import (
-	"github.com/redforks/testing/reset"
-
-	"gopkg.in/mgo.v2"
+	"testing"
 
 	. "github.com/redforks/testing/mongo/testdb"
-
-	bdd "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/mgo.v2"
 )
 
 type Rec struct {
@@ -19,44 +16,40 @@ type Rec struct {
 const testDBName = "unittest"
 const testDBUrl = "/" + testDBName
 
-var _ = bdd.Describe("mongotest", func() {
-	var (
-		testDb *TestDb
-	)
+func ensureDBDeleted(t *testing.T) {
+	session, err := mgo.Dial("127.0.0.1")
+	assert.NoError(t, err)
+	defer session.Close()
 
-	bdd.BeforeEach(func() {
-		reset.Enable()
-		testDb = New(testDBUrl)
-	})
+	// ensure database are deleted in reset
+	dbs, err := session.DatabaseNames()
+	assert.NoError(t, err)
+	assert.NotContains(t, testDBName, dbs)
+}
 
-	bdd.AfterEach(func() {
-		reset.Disable()
+func TestFields(t *testing.T) {
+	testDb := New(testDBUrl)
+	defer testDb.Close()
 
-		session, err := mgo.Dial("127.0.0.1")
-		Ω(err).Should(Succeed())
-		defer session.Close()
+	assert.NotNil(t, testDb.Session)
+	assert.NotNil(t, testDb.Database)
+	assert.Equal(t, testDBName, testDb.Name)
+	assert.Equal(t, testDBUrl, testDb.Url())
 
-		// ensure database are deleted in reset
-		dbs, err := session.DatabaseNames()
-		Ω(err).Should(Succeed())
-		Ω(dbs).ShouldNot(ContainElement(testDBName))
-	})
+	ensureDBDeleted(t)
+}
 
-	bdd.It("Fields", func() {
-		Ω(testDb.Session).ShouldNot(BeNil())
-		Ω(testDb.Database).ShouldNot(BeNil())
-		Ω(testDb.Name).Should(Equal(testDBName))
-		Ω(testDb.Url()).Should(Equal(testDBUrl))
-	})
+func TestInsert(t *testing.T) {
+	testDb := New(testDBUrl)
+	defer testDb.Close()
 
-	bdd.It("Insert", func() {
-		recs := []*Rec{
-			{0, "foo"}, {1, "bar"}, {2, "foobar"},
-		}
-		Ω(testDb.C("foo").Insert(recs[0], recs[1], recs[2])).Should(Succeed())
-		back := []*Rec{}
-		Ω(testDb.C("foo").Find(nil).All(&back)).Should(Succeed())
-		Ω(back).Should(Equal(recs))
-	})
+	recs := []*Rec{
+		{0, "foo"}, {1, "bar"}, {2, "foobar"},
+	}
+	assert.NoError(t, testDb.C("foo").Insert(recs[0], recs[1], recs[2]))
+	back := []*Rec{}
+	assert.NoError(t, testDb.C("foo").Find(nil).All(&back))
+	assert.Equal(t, recs, back)
 
-})
+	ensureDBDeleted(t)
+}
