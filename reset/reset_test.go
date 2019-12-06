@@ -4,15 +4,16 @@ import (
 	"testing"
 
 	myTesting "github.com/redforks/testing"
+	"github.com/redforks/testing/logtestor"
 	. "github.com/redforks/testing/reset"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestReset(t *testing.T) {
-	var log []string
+	var log *logtestor.LogTestor
 
 	beforeEach := func() {
-		log = []string{}
+		log = logtestor.New()
 	}
 
 	afterEach := func() {
@@ -21,17 +22,9 @@ func TestReset(t *testing.T) {
 		}
 	}
 
-	resetA := func() {
-		log = append(log, `a`)
-	}
+	resetA := func() { log.Append("a") }
 
-	resetB := func() {
-		log = append(log, `b`)
-	}
-
-	assertLog := func(exp ...string) {
-		assert.Equal(t, exp, log)
-	}
+	resetB := func() { log.Append("b") }
 
 	newTest := func(f func(t *testing.T)) func(t *testing.T) {
 		return myTesting.SetupTeardown(beforeEach, afterEach, f)
@@ -51,7 +44,7 @@ func TestReset(t *testing.T) {
 		Add(resetA)
 		Add(resetB)
 
-		assert.Empty(t, log)
+		log.AssertEmpty(t)
 	}))
 
 	t.Run("Set disabled disabled", newTest(func(t *testing.T) {
@@ -60,23 +53,23 @@ func TestReset(t *testing.T) {
 
 	t.Run("Enable/Disable", newEnabledTest(func(t *testing.T) {
 		assert.True(t, Enabled())
-		assert.Empty(t, log)
+		log.AssertEmpty(t)
 		Disable()
 		assert.False(t, Enabled())
-		assertLog("a")
+		log.Assert(t, "a")
 	}))
 
 	t.Run("Execute by reversed order", newEnabledTest(func(t *testing.T) {
 		Add(resetB)
 		Disable()
-		assertLog("b", "a")
+		log.Assert(t, "b", "a")
 	}))
 
 	t.Run("Dup action", newEnabledTest(func(t *testing.T) {
 		Add(resetA)
 		Add(resetA)
 		Disable()
-		assertLog("a", "a", "a")
+		log.Assert(t, "a", "a", "a")
 	}))
 
 	t.Run("Not allow Add() while executing", newEnabledTest(func(t *testing.T) {
