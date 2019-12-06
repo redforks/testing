@@ -3,9 +3,6 @@ package reset_test
 import (
 	"testing"
 
-	bdd "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	myTesting "github.com/redforks/testing"
 	"github.com/redforks/testing/logtestor"
 	. "github.com/redforks/testing/reset"
@@ -47,68 +44,34 @@ func TestResetRecover(t *testing.T) {
 		Enable()
 		Disable()
 		// Register once, effect for ever.
-		log.Assert(t, "OnReset", "onRecover")
+		log.Assert(t, "onReset", "onRecover")
 	}))
-}
 
-var _ = bdd.Describe("reset - recover", func() {
-	var (
-		log       = ""
-		appendLog = func(msg string) {
-			log += msg + "\n"
-		}
-		assertLog = func(expected string) {
-			Ω(log).Should(Equal(expected))
-			log = ""
-		}
-	)
-
-	bdd.It("One", func() {
-		Register(func() {
-			appendLog("onReset")
-		}, func() {
-			appendLog("onRecover")
-		})
-		assertLog("onRecover\n")
-
-		Enable()
-		assertLog("")
-
-		Disable()
-		assertLog("onReset\nonRecover\n")
-
-		Enable()
-		Disable()
-		// Register once, effect for ever.
-		assertLog("onReset\nonRecover\n")
-	})
-
-	bdd.It("nil", func() {
+	t.Run("nil", newTest(func(t *testing.T) {
 		Register(nil, nil)
 
 		Enable()
 		Disable()
-		assertLog("")
-	})
+		log.AssertEmpty(t)
+	}))
 
-	bdd.It("Two", func() {
+	t.Run("Two", newTest(func(t *testing.T) {
 		Register(func() {
-			appendLog("onReset 1")
+			log.Append("onReset 1")
 		}, func() {
-			appendLog("onRecover 1")
+			log.Append("onRecover 1")
 		})
-		assertLog("onRecover 1\n")
+		log.Assert(t, "onRecover 1")
 
 		Register(func() {
-			appendLog("onReset 2")
+			log.Append("onReset 2")
 		}, func() {
-			appendLog("onRecover 2")
+			log.Append("onRecover 2")
 		})
-		assertLog("onRecover 2\n")
+		log.Assert(t, "onRecover 2")
 
 		Enable()
 		Disable()
-		assertLog("onReset 2\nonReset 1\nonRecover 1\nonRecover 2\n")
-	})
-
-})
+		log.Assert(t, "onReset 2", "onReset 1", "onRecover 1", "onRecover 2")
+	}))
+}
