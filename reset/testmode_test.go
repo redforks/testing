@@ -1,16 +1,12 @@
 package reset_test
 
 import (
-	. "github.com/redforks/testing/reset"
+	"testing"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	. "github.com/redforks/testing/reset"
+	"github.com/stretchr/testify/assert"
 )
 
-var _ = Describe("Testmode", func() {
-
-	It("TestMode", func() {
-		Ω(TestMode()).Should(BeTrue())
-	})
-
-})
+func TestTestMode(t *testing.T) {
+	assert.True(t, TestMode())
+}
