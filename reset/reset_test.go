@@ -3,19 +3,23 @@ package reset_test
 import (
 	"testing"
 
+	myTesting "github.com/redforks/testing"
 	. "github.com/redforks/testing/reset"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestRest(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Reset")
-}
-
-var _ = Describe("Reset", func() {
+func TestReset(t *testing.T) {
 	var log []string
+
+	beforeEach := func() {
+		log = []string{}
+	}
+
+	afterEach := func() {
+		if Enabled() {
+			Disable()
+		}
+	}
 
 	resetA := func() {
 		log = append(log, `a`)
@@ -25,67 +29,60 @@ var _ = Describe("Reset", func() {
 		log = append(log, `b`)
 	}
 
-	BeforeEach(func() {
-		log = []string{}
-	})
+	assertLog := func(exp ...string) {
+		assert.Equal(t, exp, log)
+	}
 
-	AfterEach(func() {
-		if Enabled() {
-			Disable()
-		}
-	})
+	newTest := func(f func(t *testing.T)) func(t *testing.T) {
+		return myTesting.SetupTeardown(beforeEach, afterEach, f)
+	}
 
-	It("Not Enabled", func() {
-		Ω(Enabled()).Should(BeFalse())
+	newEnabledTest := func(f func(t *testing.T)) func(t *testing.T) {
+		return myTesting.SetupTeardown(func() {
+			beforeEach()
+			Enable()
+			Add(resetA)
+		}, afterEach, f)
+	}
+
+	t.Run("Not Enabled", newTest(func(t *testing.T) {
+		assert.False(t, Enabled())
+
 		Add(resetA)
 		Add(resetB)
 
-		Ω(log).Should(BeEmpty())
-	})
+		assert.Empty(t, log)
+	}))
 
-	It("Set disabled disabled", func() {
-		Ω(func() {
-			Disable()
-		}).Should(Panic())
-	})
+	t.Run("Set disabled disabled", newTest(func(t *testing.T) {
+		assert.Panics(t, Disable)
+	}))
 
-	Context("Enabled", func() {
+	t.Run("Enable/Disable", newEnabledTest(func(t *testing.T) {
+		assert.True(t, Enabled())
+		assert.Empty(t, log)
+		Disable()
+		assert.False(t, Enabled())
+		assertLog("a")
+	}))
 
-		BeforeEach(func() {
-			Enable()
+	t.Run("Execute by reversed order", newEnabledTest(func(t *testing.T) {
+		Add(resetB)
+		Disable()
+		assertLog("b", "a")
+	}))
+
+	t.Run("Dup action", newEnabledTest(func(t *testing.T) {
+		Add(resetA)
+		Add(resetA)
+		Disable()
+		assertLog("a", "a", "a")
+	}))
+
+	t.Run("Not allow Add() while executing", newEnabledTest(func(t *testing.T) {
+		Add(func() {
 			Add(resetA)
 		})
-
-		It("Enabled", func() {
-			Ω(Enabled()).Should(BeTrue())
-			Ω(log).Should(BeEmpty())
-			Disable()
-			Ω(Enabled()).Should(BeFalse())
-			Ω(log).Should(Equal([]string{"a"}))
-		})
-
-		It("Execute by reversed order", func() {
-			Add(resetB)
-			Disable()
-			Ω(log).Should(Equal([]string{"b", "a"}))
-		})
-
-		It("Add dup action", func() {
-			Add(resetA)
-			Add(resetA)
-			Disable()
-			Ω(log).Should(Equal([]string{"a", "a", "a"}))
-		})
-
-		It("Not allow Add() while executing", func() {
-			Add(func() {
-				Add(resetA)
-			})
-			Ω(func() {
-				Disable()
-			}).Should(Panic())
-		})
-
-	})
-
-})
+		assert.Panics(t, Disable)
+	}))
+}
