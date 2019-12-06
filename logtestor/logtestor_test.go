@@ -23,4 +23,6 @@ func TestAssert(t *testing.T) {
 	l.Append("foo")
 	l.Append("bar")
 	l.Assert(t, "foo", "bar")
+
+	l.AssertEmpty(t)
 }

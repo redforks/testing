@@ -1,11 +1,55 @@
 package reset_test
 
 import (
+	"testing"
+
 	bdd "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	myTesting "github.com/redforks/testing"
+	"github.com/redforks/testing/logtestor"
 	. "github.com/redforks/testing/reset"
 )
+
+func TestResetRecover(t *testing.T) {
+	var log *logtestor.LogTestor
+
+	beforeEach := func() {
+		log = logtestor.New()
+	}
+
+	afterEach := func() {
+		ClearInternal()
+
+		if Enabled() {
+			Disable()
+		}
+	}
+
+	newTest := func(f func(t *testing.T)) func(t *testing.T) {
+		return myTesting.SetupTeardown(beforeEach, afterEach, f)
+	}
+
+	t.Run("One", newTest(func(t *testing.T) {
+		Register(func() {
+			log.Append("onReset")
+		}, func() {
+			log.Append("onRecover")
+		})
+		log.Assert(t, "onRecover")
+
+		Enable()
+		log.AssertEmpty(t)
+
+		Disable()
+		log.Assert(t, "onReset", "onRecover")
+
+		Enable()
+		Disable()
+		// Register once, effect for ever.
+		log.Assert(t, "OnReset", "onRecover")
+	}))
+}
 
 var _ = bdd.Describe("reset - recover", func() {
 	var (
@@ -18,18 +62,6 @@ var _ = bdd.Describe("reset - recover", func() {
 			log = ""
 		}
 	)
-
-	bdd.BeforeEach(func() {
-		log = ""
-	})
-
-	bdd.AfterEach(func() {
-		ClearInternal()
-
-		if Enabled() {
-			Disable()
-		}
-	})
 
 	bdd.It("One", func() {
 		Register(func() {

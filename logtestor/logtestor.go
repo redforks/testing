@@ -22,9 +22,11 @@ func (l *LogTestor) Append(s string) {
 	l.Log = append(l.Log, s)
 }
 
-// Assert log content.
+// Assert log content, clear internal log after assert.
 func (l *LogTestor) Assert(t *testing.T, exp ...string) {
-	assert.Equal(t, exp, l.Log)
+	bak := l.Log
+	l.Log = nil
+	assert.Equal(t, exp, bak)
 }
 
 // Assert log buffer is empty.
